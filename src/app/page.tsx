@@ -1,11 +1,29 @@
+import { db } from "@/lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
+
 import HeroSection from "@/components/HeroSection";
 import EventInfoCard from "@/components/EventInfoCard";
 import Footer from "@/components/Footer";
 import ConcertCard from "@/components/ConcertCard";
-import { concerts } from "@/lib/concert";
+
 import Link from "next/link";
 
-export default function Home() {
+export default async function Home() {
+  const snapshot = await getDocs(collection(db, "concerts"));
+
+  const concerts = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...(doc.data() as {
+      title: string;
+      venue: string;
+      date: string;
+      time: string;
+      totalSeats: number;
+      remainingSeats: number;
+      status: string;
+    }),
+  }));
+
   return (
     <main>
       <HeroSection />
@@ -14,7 +32,6 @@ export default function Home() {
 
       <section className="px-6 pb-10">
         <div className="mx-auto flex max-w-5xl justify-end gap-4">
-
           <Link
             href="/admin"
             className="rounded-lg bg-red-600 px-6 py-3 font-bold text-white hover:bg-red-500 transition"
@@ -28,7 +45,6 @@ export default function Home() {
           >
             예매하기
           </Link>
-
         </div>
       </section>
 
@@ -38,7 +54,7 @@ export default function Home() {
             <ConcertCard
               key={concert.id}
               title={concert.title}
-              place={concert.place}
+              place={concert.venue}
               date={concert.date}
               time={concert.time}
             />

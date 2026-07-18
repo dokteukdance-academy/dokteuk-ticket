@@ -1,10 +1,11 @@
-export const concerts = [
-    {
-      id: "1",
-      title: "독특댄스아카데미 썸머 콘서트 2026",
-      place: "KSPO DOME",
-      date: "2026-08-23",
-      time: "17:00",
-      price: 25000,
-    },
-  ];
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "./firebase";
+
+export async function getConcerts() {
+  const snapshot = await getDocs(collection(db, "concerts"));
+
+  return snapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+}

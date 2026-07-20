@@ -1,5 +1,12 @@
 import type { ReactNode } from "react";
-import { EVENT } from "@/lib/event";
+
+type Concert = {
+  venue: string;
+  date: string;
+  time: string;
+  totalSeats: number;
+  remainingSeats: number;
+};
 
 function InfoBlock({
   label,
@@ -18,7 +25,11 @@ function InfoBlock({
   );
 }
 
-export default function EventInfoCard() {
+export default function EventInfoCard({
+  concert,
+}: {
+  concert: Concert;
+}) {
   return (
     <section
       className="px-6 py-24"
@@ -31,23 +42,29 @@ export default function EventInfoCard() {
 
         <div className="glass-card grid grid-cols-1 divide-y divide-white/10 rounded-2xl md:grid-cols-3 md:divide-x md:divide-y-0">
           <InfoBlock label="Event Date">
-            <p className="text-2xl font-semibold md:text-3xl">{EVENT.date}</p>
-            <p className="mt-2 text-text-muted">{EVENT.time}</p>
+            <p className="text-2xl font-semibold md:text-3xl">
+              {concert.date}
+            </p>
+            <p className="mt-2 text-text-muted">
+              {concert.time}
+            </p>
           </InfoBlock>
 
           <InfoBlock label="Event Location">
             <p className="text-2xl font-semibold md:text-3xl">
-              Dokteuk Dance Academy
+              {concert.venue}
             </p>
-            <p className="mt-2 text-text-muted">Main Hall, Seoul</p>
+            <p className="mt-2 text-text-muted">
+              대전서구문화원 6층 공연장
+            </p>
           </InfoBlock>
 
           <InfoBlock label="Remaining Seats">
             <p className="text-5xl font-semibold text-accent-gold md:text-6xl">
-              {EVENT.remainingSeats}
+              {concert.remainingSeats}
             </p>
             <p className="mt-2 text-text-muted">
-              of {EVENT.totalSeats} seats available
+              총 {concert.totalSeats}석
             </p>
           </InfoBlock>
         </div>

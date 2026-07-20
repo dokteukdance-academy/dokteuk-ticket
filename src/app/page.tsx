@@ -1,5 +1,3 @@
-"use client";
-
 import { db } from "@/lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
 
@@ -25,12 +23,14 @@ export default async function Home() {
       status: string;
     }),
   }));
+  
+  console.log("concerts =", concerts);
 
   return (
     <main>
       <HeroSection />
 
-      <EventInfoCard />
+      <EventInfoCard concert={concerts[0]} />
 
       <section className="px-6 pb-10">
         <div className="mx-auto flex max-w-5xl justify-end gap-4">
@@ -59,7 +59,6 @@ export default async function Home() {
             place={concert.venue}
             date={concert.date}
             time={concert.time}
-            onReserve={() => {}}
           />
           ))}
         </div>

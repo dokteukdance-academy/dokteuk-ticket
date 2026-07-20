@@ -48,13 +48,16 @@ export default function SeatMap({
   );
 
   return (
-    <div className="w-full overflow-x-scroll overflow-y-hidden">
-      <div className="inline-flex flex-col px-8">
-        <div className="mb-8 h-8 min-w-[860px] rounded bg-yellow-500 flex items-center justify-center text-black font-bold">
+    <div className="w-full overflow-x-auto">
+      <div
+        className="mx-auto"
+        style={{ width: "max-content", minWidth: "920px" }}
+      >
+        <div className="mb-8 h-8 rounded bg-yellow-500 flex items-center justify-center text-black font-bold">
           STAGE
         </div>
 
-        <div className="flex gap-10 min-w-[860px]">
+        <div className="flex gap-10">
           {renderBlock(seatBlocks.left)}
           {renderBlock(seatBlocks.center)}
           {renderBlock(seatBlocks.right)}

@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import SeatMap from "@/components/SeatMap";
+import { loadTossPayments } from "@tosspayments/payment-sdk";
 
+import SeatMap from "@/components/SeatMap";
 import ReservationForm from "@/components/ReservationForm";
 import PriceInfo from "@/components/PriceInfo";
 
 import { db } from "@/lib/firebase";
-import { addDoc, collection, getDocs } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 
 export default function ReservePage() {
-  const router = useRouter();
+  const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY!;
 
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [reservedSeats, setReservedSeats] = useState<string[]>([]);
@@ -21,8 +21,8 @@ export default function ReservePage() {
   const loadReservedSeats = async () => {
     const snapshot = await getDocs(collection(db, "reservations"));
 
-    const reserved = snapshot.docs.map(
-      (doc) => doc.data().seat as string
+    const reserved = snapshot.docs.flatMap(
+      (doc) => doc.data().seats || []
     );
 
     setReservedSeats(reserved);
@@ -48,7 +48,7 @@ export default function ReservePage() {
     setSelectedSeats([...selectedSeats, seat]);
   };
 
-  const handleReserve = async () => {
+  const handlePayment = async () => {
     if (selectedSeats.length === 0) {
       alert("좌석을 선택해주세요.");
       return;
@@ -59,28 +59,33 @@ export default function ReservePage() {
       return;
     }
 
+   
+    localStorage.setItem(
+      "selectedSeats",
+      JSON.stringify(selectedSeats)
+    );
+
+    localStorage.setItem("customerName", name);
+    localStorage.setItem("customerPhone", phone);
+    
+
+    const tossPayments = await loadTossPayments(clientKey);
+
     const reservationNumber =
       "DKT-" + Date.now().toString().slice(-8);
 
-    for (const seat of selectedSeats) {
-      await addDoc(collection(db, "reservations"), {
-        reservationNumber,
-        name,
-        phone,
-        seat,
-        price: 25000,
-        status: "예약 완료",
-        createdAt: new Date(),
-      });
-    }
+    await tossPayments.requestPayment("카드", {
+      amount: selectedSeats.length * 25000,
 
-    await loadReservedSeats();
+      orderId: reservationNumber,
 
-    setSelectedSeats([]);
-    setName("");
-    setPhone("");
+      orderName: `${selectedSeats.length}매 공연 예매`,
 
-    router.push("/complete");
+      customerName: name,
+
+      successUrl: `${window.location.origin}/payment/success`,
+      failUrl: `${window.location.origin}/payment/fail`,
+    });
   };
 
   return (
@@ -132,7 +137,7 @@ export default function ReservePage() {
       </div>
 
       <button
-        onClick={handleReserve}
+        onClick={handlePayment}
         className="mt-8 bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-8 py-4 rounded-lg transition"
       >
         예매하기

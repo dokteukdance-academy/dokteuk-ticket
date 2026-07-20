@@ -9,8 +9,15 @@ import {
   doc,
 } from "firebase/firestore";
 
+type Reservation = {
+  id: string;
+  name: string;
+  phone: string;
+  seat: string;
+};
+
 export default function AdminPage() {
-  const [reservations, setReservations] = useState<any[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
 
   const [id, setId] = useState("");
   const [password, setPassword] = useState("");
@@ -20,9 +27,9 @@ export default function AdminPage() {
     async function loadReservations() {
       const snapshot = await getDocs(collection(db, "reservations"));
 
-      const list = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
+      const list: Reservation[] = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...(docSnap.data() as Omit<Reservation, "id">),
       }));
 
       setReservations(list);
@@ -31,11 +38,11 @@ export default function AdminPage() {
     loadReservations();
   }, []);
 
-  const deleteReservation = async (id: string) => {
-    await deleteDoc(doc(db, "reservations", id));
+  const deleteReservation = async (reservationId: string) => {
+    await deleteDoc(doc(db, "reservations", reservationId));
 
     setReservations((prev) =>
-      prev.filter((item: any) => item.id !== id)
+      prev.filter((item) => item.id !== reservationId)
     );
   };
 
@@ -85,7 +92,7 @@ export default function AdminPage() {
           <h1 className="text-4xl font-bold">예약 목록</h1>
 
           <div className="mt-8 space-y-4">
-            {reservations.map((item: any) => (
+            {reservations.map((item) => (
               <div
                 key={item.id}
                 className="border border-gray-700 rounded-lg p-4"

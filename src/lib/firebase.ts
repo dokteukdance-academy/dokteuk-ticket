@@ -1,20 +1,17 @@
 import { initializeApp } from "firebase/app";
-
 import { getFirestore } from "firebase/firestore";
-
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA-n9V8jZNsdK5J1xhByH8b-8kw3caVmeA",
-  authDomain: "dokteuk-ticket-fe450.firebaseapp.com",
-  projectId: "dokteuk-ticket-fe450",
-  storageBucket: "dokteuk-ticket-fe450.firebasestorage.app",
-  messagingSenderId: "870008497426",
-  appId: "1:870008497426:web:e260d3ccbc2501e691ffcb",
+  apiKey: "AIzaSyAHRxSs4gPyztFkkgd4UI5dG4lyX3d9LFw",
+  authDomain: "dokteuk-ticket.firebaseapp.com",
+  projectId: "dokteuk-ticket",
+  storageBucket: "dokteuk-ticket.firebasestorage.app",
+  messagingSenderId: "55537993922",
+  appId: "1:55537993922:web:64076adeeeca508946535b",
 };
 
 const app = initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
-
 export const auth = getAuth(app);

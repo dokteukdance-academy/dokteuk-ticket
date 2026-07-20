@@ -3,28 +3,31 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import {
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-} from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 
 import {
   onAuthStateChanged,
   signOut,
 } from "firebase/auth";
 
-import { db, auth } from "@/lib/firebase";
+import {
+  collection,
+  onSnapshot,
+  deleteDoc,
+  doc,
+  getDoc,
+  updateDoc,
+} from "firebase/firestore";
 
 type Reservation = {
-    id: string;
-    name: string;
-    phone: string;
-    seats: string[];
-  };
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  seats: string[];
+  amount: number;
+};
 
-const TOTAL_SEATS = 32;
+const TOTAL_SEATS = 241;
 
 export default function AdminPage() {
   const router = useRouter();
@@ -33,173 +36,222 @@ export default function AdminPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(
-      auth,
-      (user) => {
-        if (!user) {
-          router.replace("/admin/login");
-          return;
-        }
-
-        const unsubscribeSnapshot = onSnapshot(
-          collection(db, "reservations"),
-          (snapshot) => {
-            const grouped = new Map<string, Reservation>();
-
-snapshot.docs.forEach((docItem) => {
-  const data = docItem.data();
-
-  const key = `${data.name}-${data.phone}`;
-
-  if (!grouped.has(key)) {
-    grouped.set(key, {
-      id: docItem.id,
-      name: data.name,
-      phone: data.phone,
-      seats: [data.seat],
-    });
-  } else {
-    grouped.get(key)!.seats.push(data.seat);
-  }
-});
-
-setReservations(Array.from(grouped.values()));
-            setLoading(false);
-          }
-        );
-
-        return unsubscribeSnapshot;
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.replace("/admin/login");
+        return;
       }
-    );
+
+      const unsubscribeFirestore = onSnapshot(
+        collection(db, "reservations"),
+        (snapshot) => {
+          const list: Reservation[] = snapshot.docs.map((docItem) => {
+            const data = docItem.data();
+
+            return {
+              id: docItem.id,
+              customerName: data.customerName || "",
+              customerPhone: data.customerPhone || "",
+              seats: data.seats || [],
+              amount: data.amount || 0,
+            };
+          });
+
+          setReservations(list);
+          setLoading(false);
+        }
+      );
+
+      return () => unsubscribeFirestore();
+    });
 
     return () => unsubscribeAuth();
   }, [router]);
 
-  const handleLogout = async () => {
+  async function handleLogout() {
     await signOut(auth);
-
-    alert("로그아웃 되었습니다.");
-
     router.replace("/admin/login");
-  };
+  }
 
-  const handleDelete = async (id: string) => {
-    const ok = confirm("예약을 취소하시겠습니까?");
-
+  async function handleDelete(id: string) {
+    const ok = confirm("예약을 삭제하시겠습니까?");
     if (!ok) return;
 
-    await deleteDoc(doc(db, "reservations", id));
+    try {
+      const reservationRef = doc(db, "reservations", id);
+      const reservationSnap = await getDoc(reservationRef);
 
-    alert("예약이 취소되었습니다.");
-  };
+      if (!reservationSnap.exists()) {
+        alert("예약 정보를 찾을 수 없습니다.");
+        return;
+      }
+
+      const reservation = reservationSnap.data();
+
+      const seats: string[] = reservation.seats || [];
+
+      const concertRef = doc(db, "concerts", "summer2026");
+      const concertSnap = await getDoc(concertRef);
+
+      if (concertSnap.exists()) {
+        const concert = concertSnap.data();
+
+        const reservedSeats: string[] =
+          concert.reservedSeats || [];
+
+        const newReservedSeats = reservedSeats.filter(
+          (seat) => !seats.includes(seat)
+        );
+
+        await updateDoc(concertRef, {
+          reservedSeats: newReservedSeats,
+          remainingSeats:
+            (concert.remainingSeats || 0) + seats.length,
+        });
+      }
+
+      await deleteDoc(reservationRef);
+
+      alert("예약이 취소되었습니다.");
+    } catch (err) {
+      console.error(err);
+      alert("예약 삭제 실패");
+    }
+  }
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-black flex items-center justify-center text-white text-2xl">
+      <main className="min-h-screen flex items-center justify-center bg-black text-white">
         불러오는 중...
       </main>
     );
   }
 
+  const reservedCount = reservations.reduce(
+    (sum, item) => sum + item.seats.length,
+    0
+  );
+
   return (
     <main className="min-h-screen bg-black text-white p-10">
       <div className="mx-auto max-w-6xl">
 
-        <div className="flex items-center justify-between">
+        <div className="flex justify-between items-center">
 
-          <h1 className="text-5xl font-bold">
+          <h1 className="text-4xl font-bold">
             관리자 페이지
           </h1>
 
-          <button
-            onClick={handleLogout}
-            className="rounded-lg bg-red-600 px-6 py-3 font-bold hover:bg-red-500"
-          >
-            로그아웃
-          </button>
+          <div className="flex gap-3">
+
+            <button
+              onClick={() => router.push("/admin/scan")}
+              className="bg-blue-600 hover:bg-blue-500 px-5 py-3 rounded-lg font-bold"
+            >
+              📷 QR 스캔
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-500 px-5 py-3 rounded-lg font-bold"
+            >
+              로그아웃
+            </button>
+
+          </div>
 
         </div>
 
-        <div className="mt-8 grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-5 mt-10">
 
-          <div className="rounded-xl border border-gray-700 bg-gray-900 p-6">
+          <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
             <p className="text-gray-400">
               총 예약자
             </p>
 
-            <p className="mt-2 text-4xl font-bold text-yellow-400">
+            <p className="text-4xl font-bold text-yellow-400 mt-3">
               {reservations.length}명
             </p>
           </div>
 
-          <div className="rounded-xl border border-gray-700 bg-gray-900 p-6">
+          <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
             <p className="text-gray-400">
               남은 좌석
             </p>
 
-            <p className="mt-2 text-4xl font-bold text-green-400">
-  {
-    TOTAL_SEATS -
-    reservations.reduce(
-      (sum, item) => sum + item.seats.length,
-      0
-    )
-  }석
-</p>
+            <p className="text-4xl font-bold text-green-400 mt-3">
+              {TOTAL_SEATS - reservedCount}석
+            </p>
           </div>
 
         </div>
 
-        {reservations.length === 0 ? (
-          <p className="mt-12 text-xl">
-            예약자가 없습니다.
-          </p>
-        ) : (
-          <div className="mt-10 space-y-5">
+        <div className="mt-12 space-y-5">
 
-            {reservations.map((item) => (
+          {reservations.length === 0 && (
+            <div className="text-gray-400">
+              예약자가 없습니다.
+            </div>
+          )}
 
-              <div
-                key={item.id}
-                className="rounded-xl border border-gray-700 bg-gray-900 p-6"
-              >
+          {reservations.map((item) => (
 
-                <div className="space-y-2">
+            <div
+              key={item.id}
+              className="bg-gray-900 border border-gray-700 rounded-xl p-6"
+            >
 
-                  <p>
-                    👤 <b>이름</b> : {item.name}
-                  </p>
+              <div className="space-y-2">
 
-                  <p>
-                    📞 <b>전화번호</b> : {item.phone}
-                  </p>
+                <p>
+                  👤 이름 :
+                  <span className="font-bold ml-2">
+                    {item.customerName}
+                  </span>
+                </p>
 
-                  <p>
-                  💺 <b>좌석</b> : {item.seats.join(", ")}
-                  </p>
-                  <p>
-  🎟 <b>매수</b> : {item.seats.length}매
-</p>
+                <p>
+                  📞 전화번호 :
+                  <span className="ml-2">
+                    {item.customerPhone}
+                  </span>
+                </p>
 
-<p>
-  💰 <b>금액</b> : ₩{(item.seats.length * 25000).toLocaleString()}
-</p>
+                <p>
+                  💺 좌석 :
+                  <span className="ml-2">
+                    {item.seats.join(", ")}
+                  </span>
+                </p>
 
-                </div>
+                <p>
+                  🎟 매수 :
+                  <span className="ml-2">
+                    {item.seats.length}매
+                  </span>
+                </p>
 
-                <button
-                  onClick={() => handleDelete(item.id)}
-                  className="mt-6 rounded-lg bg-red-600 px-5 py-3 font-bold hover:bg-red-500"
-                >
-                  예약 취소
-                </button>
+                <p>
+                  💰 결제금액 :
+                  <span className="ml-2 font-bold">
+                    ₩{item.amount.toLocaleString()}
+                  </span>
+                </p>
 
               </div>
 
-            ))}
+              <button
+                onClick={() => handleDelete(item.id)}
+                className="mt-5 bg-red-600 hover:bg-red-500 px-5 py-2 rounded-lg"
+              >
+                예약 삭제
+              </button>
 
-          </div>
-        )}
+            </div>
+
+          ))}
+
+        </div>
 
       </div>
     </main>

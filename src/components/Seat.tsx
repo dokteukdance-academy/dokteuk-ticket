@@ -21,8 +21,14 @@ type SeatProps = {
       <button
         disabled={isDisabled}
         onClick={onClick}
-        className={`
-          h-10 w-10 rounded font-semibold transition
+   className={`
+  h-10 
+  w-10 
+  min-w-10 
+  flex-shrink-0 
+  rounded 
+  font-semibold 
+  transition
   
           ${
             blocked

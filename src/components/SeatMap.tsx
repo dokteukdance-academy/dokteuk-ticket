@@ -17,7 +17,7 @@ export default function SeatMap({
   onSelect,
 }: Props) {
   const renderBlock = (block: string[][]) => (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-3 flex-shrink-0">
       {block.map((row, rowIndex) => (
         <div key={rowIndex} className="flex gap-2">
           {row.map((seat, index) => {
@@ -48,13 +48,13 @@ export default function SeatMap({
   );
 
   return (
-    <div className="w-full overflow-x-auto pb-4">
-      <div className="inline-block pl-4 pr-10">
-        <div className="mb-8 w-full h-8 rounded bg-yellow-500 flex items-center justify-center text-black font-bold">
+    <div className="w-full overflow-x-scroll overflow-y-hidden">
+      <div className="inline-flex flex-col px-8">
+        <div className="mb-8 h-8 min-w-[860px] rounded bg-yellow-500 flex items-center justify-center text-black font-bold">
           STAGE
         </div>
 
-        <div className="flex gap-10">
+        <div className="flex gap-10 min-w-[860px]">
           {renderBlock(seatBlocks.left)}
           {renderBlock(seatBlocks.center)}
           {renderBlock(seatBlocks.right)}

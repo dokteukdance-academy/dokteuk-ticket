@@ -51,15 +51,17 @@ export default function SeatMap({
   );
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div className="mb-8 mx-auto w-[500px] h-8 rounded bg-yellow-500 flex items-center justify-center text-black font-bold">
-        STAGE
-      </div>
+    <div className="w-full overflow-x-auto pb-4">
+      <div className="inline-block min-w-max px-6">
+        <div className="mb-8 h-8 rounded bg-yellow-500 flex items-center justify-center text-black font-bold">
+          STAGE
+        </div>
 
-      <div className="flex justify-center gap-10">
-        {renderBlock(seatBlocks.left)}
-        {renderBlock(seatBlocks.center)}
-        {renderBlock(seatBlocks.right)}
+        <div className="flex gap-10">
+          {renderBlock(seatBlocks.left)}
+          {renderBlock(seatBlocks.center)}
+          {renderBlock(seatBlocks.right)}
+        </div>
       </div>
     </div>
   );

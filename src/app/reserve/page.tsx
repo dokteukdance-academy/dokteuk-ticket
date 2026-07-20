@@ -59,7 +59,6 @@ export default function ReservePage() {
       return;
     }
 
-   
     localStorage.setItem(
       "selectedSeats",
       JSON.stringify(selectedSeats)
@@ -67,7 +66,6 @@ export default function ReservePage() {
 
     localStorage.setItem("customerName", name);
     localStorage.setItem("customerPhone", phone);
-    
 
     const tossPayments = await loadTossPayments(clientKey);
 
@@ -76,72 +74,82 @@ export default function ReservePage() {
 
     await tossPayments.requestPayment("카드", {
       amount: selectedSeats.length * 25000,
-
       orderId: reservationNumber,
-
       orderName: `${selectedSeats.length}매 공연 예매`,
-
       customerName: name,
-
       successUrl: `${window.location.origin}/payment/success`,
       failUrl: `${window.location.origin}/payment/fail`,
     });
   };
 
   return (
-    <main className="min-h-screen bg-black text-white flex flex-col items-center p-10">
-      <h1 className="text-5xl font-bold mb-2">
-        좌석 선택
-      </h1>
+    <main className="min-h-screen bg-black text-white">
 
-      <p className="text-gray-400 mb-10">
-        원하는 좌석을 선택하세요.
-      </p>
+      <div className="max-w-6xl mx-auto px-4 py-10">
 
-      <ReservationForm
-        name={name}
-        phone={phone}
-        setName={setName}
-        setPhone={setPhone}
-      />
+        <h1 className="text-5xl font-bold text-center mb-2">
+          좌석 선택
+        </h1>
 
-      <PriceInfo />
+        <p className="text-gray-400 text-center mb-10">
+          원하는 좌석을 선택하세요.
+        </p>
 
-      <SeatMap
-        selectedSeats={selectedSeats}
-        reservedSeats={reservedSeats}
-        onSelect={handleSeatSelect}
-      />
+        <div className="max-w-md mx-auto">
+          <ReservationForm
+            name={name}
+            phone={phone}
+            setName={setName}
+            setPhone={setPhone}
+          />
 
-      <div className="mt-8 rounded-xl bg-gray-900 border border-gray-700 p-6 w-96 space-y-3">
-        <div className="flex justify-between">
-          <span>선택 좌석</span>
-          <span className="text-yellow-400">
-            {selectedSeats.length
-              ? selectedSeats.join(", ")
-              : "-"}
-          </span>
+          <PriceInfo />
         </div>
 
-        <div className="flex justify-between">
-          <span>매수</span>
-          <span>{selectedSeats.length}매</span>
+        {/* 좌석맵 */}
+        <div className="mt-8">
+          <SeatMap
+            selectedSeats={selectedSeats}
+            reservedSeats={reservedSeats}
+            onSelect={handleSeatSelect}
+          />
         </div>
 
-        <div className="flex justify-between">
-          <span>총 금액</span>
-          <span className="font-bold">
-            ₩{(selectedSeats.length * 25000).toLocaleString()}
-          </span>
+        {/* 선택 정보 */}
+        <div className="mt-10 max-w-md mx-auto rounded-xl bg-gray-900 border border-gray-700 p-6 space-y-3">
+          <div className="flex justify-between">
+            <span>선택 좌석</span>
+            <span className="text-yellow-400">
+              {selectedSeats.length
+                ? selectedSeats.join(", ")
+                : "-"}
+            </span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>매수</span>
+            <span>{selectedSeats.length}매</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>총 금액</span>
+            <span className="font-bold">
+              ₩{(selectedSeats.length * 25000).toLocaleString()}
+            </span>
+          </div>
         </div>
+
+        <div className="text-center">
+          <button
+            onClick={handlePayment}
+            className="mt-8 bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-8 py-4 rounded-lg transition"
+          >
+            예매하기
+          </button>
+        </div>
+
       </div>
 
-      <button
-        onClick={handlePayment}
-        className="mt-8 bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-8 py-4 rounded-lg transition"
-      >
-        예매하기
-      </button>
     </main>
   );
 }

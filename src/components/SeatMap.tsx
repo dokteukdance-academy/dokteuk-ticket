@@ -19,16 +19,13 @@ export default function SeatMap({
   const renderBlock = (block: string[][]) => (
     <div className="flex flex-col gap-3">
       {block.map((row, rowIndex) => (
-        <div
-          key={rowIndex}
-          className="flex justify-center gap-2"
-        >
+        <div key={rowIndex} className="flex gap-2">
           {row.map((seat, index) => {
             if (seat === "") {
               return (
                 <div
                   key={index}
-                  className="w-10 h-10"
+                  className="w-10 h-10 flex-shrink-0"
                 />
               );
             }
@@ -52,8 +49,8 @@ export default function SeatMap({
 
   return (
     <div className="w-full overflow-x-auto pb-4">
-      <div className="inline-block min-w-max px-6">
-        <div className="mb-8 h-8 rounded bg-yellow-500 flex items-center justify-center text-black font-bold">
+      <div className="inline-block pl-4 pr-10">
+        <div className="mb-8 w-full h-8 rounded bg-yellow-500 flex items-center justify-center text-black font-bold">
           STAGE
         </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
 
 import {
   collection,
@@ -22,7 +22,7 @@ type Reservation = {
   entered?: boolean;
 };
 
-export default function CheckPage() {
+function CheckContent() {
   const searchParams = useSearchParams();
 
   const code = searchParams.get("code");
@@ -53,9 +53,14 @@ export default function CheckPage() {
 
         const data = snapshot.docs[0];
 
+        const reservationData = data.data() as Omit<
+          Reservation,
+          "id"
+        >;
+
         setReservation({
           id: data.id,
-          ...(data.data() as any),
+          ...reservationData,
         });
 
         setLoading(false);
@@ -86,25 +91,25 @@ export default function CheckPage() {
     location.reload();
   }
 
-  if (loading)
+  if (loading) {
     return (
       <main className="min-h-screen bg-black text-white flex items-center justify-center">
         조회중...
       </main>
     );
+  }
 
-  if (!reservation)
+  if (!reservation) {
     return (
       <main className="min-h-screen bg-black text-red-500 flex items-center justify-center text-3xl">
         {message}
       </main>
     );
+  }
 
   return (
     <main className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-
       <div className="bg-gray-900 rounded-xl p-10 w-[420px]">
-
         <h1 className="text-3xl font-bold mb-8">
           티켓 확인
         </h1>
@@ -142,9 +147,21 @@ export default function CheckPage() {
             입장 처리
           </button>
         )}
-
       </div>
-
     </main>
+  );
+}
+
+export default function CheckPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-black text-white flex items-center justify-center">
+          로딩중...
+        </main>
+      }
+    >
+      <CheckContent />
+    </Suspense>
   );
 }

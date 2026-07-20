@@ -1,3 +1,5 @@
+"use client";
+
 import { db } from "@/lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
 
@@ -52,12 +54,13 @@ export default async function Home() {
         <div className="mx-auto max-w-5xl space-y-8">
           {concerts.map((concert) => (
             <ConcertCard
-              key={concert.id}
-              title={concert.title}
-              place={concert.venue}
-              date={concert.date}
-              time={concert.time}
-            />
+            key={concert.id}
+            title={concert.title}
+            place={concert.venue}
+            date={concert.date}
+            time={concert.time}
+            onReserve={() => {}}
+          />
           ))}
         </div>
       </section>

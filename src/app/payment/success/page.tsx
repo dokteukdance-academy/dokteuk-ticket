@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
 import QRCode from "react-qr-code";
@@ -12,7 +12,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
 
   const paymentKey = searchParams.get("paymentKey");
@@ -34,9 +34,6 @@ export default function SuccessPage() {
         const customerPhone =
           localStorage.getItem("customerPhone") || "";
 
-        console.log("결제 승인 시작");
-        console.log("좌석:", seats);
-
         const response = await fetch("/api/payment/confirm", {
           method: "POST",
           headers: {
@@ -52,13 +49,11 @@ export default function SuccessPage() {
 
         const result = await response.json();
 
-        console.log("API 응답:", result);
-
         if (!response.ok) {
           throw new Error(result.message || "결제 승인 실패");
         }
 
-        const docRef = await addDoc(collection(db, "reservations"), {
+        await addDoc(collection(db, "reservations"), {
           orderId,
           reservationNumber: orderId,
           paymentKey,
@@ -69,15 +64,11 @@ export default function SuccessPage() {
           createdAt: serverTimestamp(),
         });
 
-        console.log("예약 저장 완료:", docRef.id);
-
         localStorage.removeItem("selectedSeats");
         localStorage.removeItem("customerName");
         localStorage.removeItem("customerPhone");
-
-        console.log("모든 작업 완료");
       } catch (err) {
-        console.error("예약 저장 실패", err);
+        console.error(err);
       }
     };
 
@@ -86,7 +77,6 @@ export default function SuccessPage() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-black text-white px-6">
-
       <h1 className="text-4xl font-bold text-green-400 mb-4">
         ✅ 결제가 완료되었습니다.
       </h1>
@@ -96,11 +86,8 @@ export default function SuccessPage() {
       </p>
 
       <div className="bg-gray-900 rounded-xl p-8 w-full max-w-md space-y-5">
-
         <div className="flex justify-between">
-          <span className="text-gray-400">
-            예약번호
-          </span>
+          <span className="text-gray-400">예약번호</span>
 
           <span className="font-bold text-yellow-400">
             {orderId}
@@ -108,17 +95,12 @@ export default function SuccessPage() {
         </div>
 
         <div className="flex justify-between">
-          <span className="text-gray-400">
-            결제금액
-          </span>
+          <span className="text-gray-400">결제금액</span>
 
-          <span>
-            {amount}원
-          </span>
+          <span>{amount}원</span>
         </div>
 
         <div className="border-t border-gray-700 pt-8 flex flex-col items-center">
-
           <QRCode
             value={orderId || ""}
             size={220}
@@ -129,11 +111,22 @@ export default function SuccessPage() {
           <p className="mt-6 text-sm text-gray-400">
             공연장 입장 시 QR코드를 보여주세요.
           </p>
-
         </div>
-
       </div>
-
     </main>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen flex items-center justify-center bg-black text-white">
+          로딩중...
+        </main>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
   );
 }

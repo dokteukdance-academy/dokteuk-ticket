@@ -83,8 +83,7 @@ export default function ReservePage() {
   };
 
   return (
-    <main className="min-h-screen bg-black text-white">
-
+    <main className="min-h-screen bg-black text-white overflow-y-auto">
       <div className="max-w-6xl mx-auto px-4 py-10">
 
         <h1 className="text-5xl font-bold text-center mb-2">
@@ -107,13 +106,13 @@ export default function ReservePage() {
         </div>
 
         {/* 좌석맵 */}
-        <div className="mt-8">
+        <section className="mt-8 w-full overflow-x-auto pb-8">
           <SeatMap
             selectedSeats={selectedSeats}
             reservedSeats={reservedSeats}
             onSelect={handleSeatSelect}
           />
-        </div>
+        </section>
 
         {/* 선택 정보 */}
         <div className="mt-10 max-w-md mx-auto rounded-xl bg-gray-900 border border-gray-700 p-6 space-y-3">
@@ -139,7 +138,7 @@ export default function ReservePage() {
           </div>
         </div>
 
-        <div className="text-center">
+        <div className="text-center pb-20">
           <button
             onClick={handlePayment}
             className="mt-8 bg-yellow-500 hover:bg-yellow-400 text-black font-bold px-8 py-4 rounded-lg transition"
@@ -149,7 +148,6 @@ export default function ReservePage() {
         </div>
 
       </div>
-
     </main>
   );
 }

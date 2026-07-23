@@ -28,11 +28,11 @@ export default function SeatMap({
   }, []);
 
   const renderBlock = (block: string[][]) => (
-    <div className="flex flex-col gap-3 flex-shrink-0">
+    <div className="flex flex-col gap-2 flex-shrink-0">
       {block.map((row, rowIndex) => (
         <div
           key={rowIndex}
-          className="flex gap-2"
+          className="flex justify-center gap-2"
         >
           {row.map((seat, index) => {
             if (seat === "") {
@@ -62,32 +62,47 @@ export default function SeatMap({
   );
 
   return (
-    <div
-      ref={scrollRef}
-      className="w-full overflow-x-auto overflow-y-hidden touch-pan-x"
-    >
+    <div className="w-full">
       <div
-        className="inline-flex flex-col"
-        style={{
-          minWidth: "960px",
-          paddingLeft: "16px",
-          paddingRight: "16px",
-        }}
+        ref={scrollRef}
+        className="
+          overflow-x-auto
+          overflow-y-visible
+          touch-pan-x
+          pb-6
+          scrollbar-thin
+        "
       >
         <div
-          className="mb-8 h-8 rounded bg-yellow-500 flex items-center justify-center text-black font-bold"
-          style={{ width: "960px" }}
+          className="mx-auto"
+          style={{
+            width: "max-content",
+            minWidth: "960px",
+            padding: "0 20px",
+          }}
         >
-          STAGE
-        </div>
+          <div
+            className="
+              h-10
+              rounded-lg
+              bg-yellow-500
+              flex
+              items-center
+              justify-center
+              text-black
+              font-bold
+              text-lg
+              mb-8
+            "
+          >
+            STAGE
+          </div>
 
-        <div
-          className="flex gap-10"
-          style={{ width: "960px" }}
-        >
-          {renderBlock(seatBlocks.left)}
-          {renderBlock(seatBlocks.center)}
-          {renderBlock(seatBlocks.right)}
+          <div className="flex justify-center gap-10">
+            {renderBlock(seatBlocks.left)}
+            {renderBlock(seatBlocks.center)}
+            {renderBlock(seatBlocks.right)}
+          </div>
         </div>
       </div>
     </div>

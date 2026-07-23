@@ -32,7 +32,7 @@ export default function SeatMap({
       {block.map((row, rowIndex) => (
         <div
           key={rowIndex}
-          className="flex gap-2 justify-center"
+          className="flex gap-2"
         >
           {row.map((seat, index) => {
             if (seat === "") {
@@ -66,24 +66,28 @@ export default function SeatMap({
       ref={scrollRef}
       className="w-full overflow-x-auto overflow-y-hidden touch-pan-x"
     >
-      <div className="flex justify-center">
+      <div
+        className="inline-flex flex-col"
+        style={{
+          minWidth: "960px",
+          paddingLeft: "16px",
+          paddingRight: "16px",
+        }}
+      >
         <div
-          className="flex flex-col items-center py-4"
-          style={{
-            minWidth: "960px",
-          }}
+          className="mb-8 h-8 rounded bg-yellow-500 flex items-center justify-center text-black font-bold"
+          style={{ width: "960px" }}
         >
-          <div className="w-full mb-8">
-            <div className="h-8 rounded bg-yellow-500 flex items-center justify-center text-black font-bold">
-              STAGE
-            </div>
-          </div>
+          STAGE
+        </div>
 
-          <div className="flex justify-center gap-10">
-            {renderBlock(seatBlocks.left)}
-            {renderBlock(seatBlocks.center)}
-            {renderBlock(seatBlocks.right)}
-          </div>
+        <div
+          className="flex gap-10"
+          style={{ width: "960px" }}
+        >
+          {renderBlock(seatBlocks.left)}
+          {renderBlock(seatBlocks.center)}
+          {renderBlock(seatBlocks.right)}
         </div>
       </div>
     </div>

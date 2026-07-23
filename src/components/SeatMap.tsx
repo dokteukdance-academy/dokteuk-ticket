@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import Seat from "./Seat";
 import {
   seatBlocks,
@@ -16,10 +19,21 @@ export default function SeatMap({
   reservedSeats,
   onSelect,
 }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = 0;
+    }
+  }, []);
+
   const renderBlock = (block: string[][]) => (
     <div className="flex flex-col gap-3 flex-shrink-0">
       {block.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex gap-2">
+        <div
+          key={rowIndex}
+          className="flex gap-2 justify-center"
+        >
           {row.map((seat, index) => {
             if (seat === "") {
               return (
@@ -48,19 +62,28 @@ export default function SeatMap({
   );
 
   return (
-    <div className="w-full overflow-x-auto">
-      <div
-        className="mx-auto"
-        style={{ width: "max-content", minWidth: "920px" }}
-      >
-        <div className="mb-8 h-8 rounded bg-yellow-500 flex items-center justify-center text-black font-bold">
-          STAGE
-        </div>
+    <div
+      ref={scrollRef}
+      className="w-full overflow-x-auto overflow-y-hidden touch-pan-x"
+    >
+      <div className="flex justify-center">
+        <div
+          className="flex flex-col items-center py-4"
+          style={{
+            minWidth: "960px",
+          }}
+        >
+          <div className="w-full mb-8">
+            <div className="h-8 rounded bg-yellow-500 flex items-center justify-center text-black font-bold">
+              STAGE
+            </div>
+          </div>
 
-        <div className="flex gap-10">
-          {renderBlock(seatBlocks.left)}
-          {renderBlock(seatBlocks.center)}
-          {renderBlock(seatBlocks.right)}
+          <div className="flex justify-center gap-10">
+            {renderBlock(seatBlocks.left)}
+            {renderBlock(seatBlocks.center)}
+            {renderBlock(seatBlocks.right)}
+          </div>
         </div>
       </div>
     </div>

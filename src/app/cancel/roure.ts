@@ -26,6 +26,22 @@ export async function POST(req: Request) {
 
     await deleteDoc(doc(db, "reservations", reservation.id));
 
+    await fetch(
+        `${process.env.NEXT_PUBLIC_SITE_URL}/api/sms/cancel`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: reservation.data().customerName,
+            phone: reservation.data().customerPhone,
+            seat: reservation.data().seats.join(", "),
+            quantity: reservation.data().seats.length,
+          }),
+        }
+      );
+
     return NextResponse.json({
       success: true,
     });

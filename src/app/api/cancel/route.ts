@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { NextRequest, NextResponse } from "next/server";
 import {
   collection,
@@ -45,13 +47,16 @@ export async function POST(req: NextRequest) {
       success: true,
     });
 
-} catch (err: any) {
+} catch (err: unknown) {
     console.error("API ERROR:", err);
+  
+    const message =
+      err instanceof Error ? err.message : "취소 실패";
   
     return NextResponse.json(
       {
         success: false,
-        message: err?.message || "취소 실패",
+        message,
       },
       {
         status: 500,

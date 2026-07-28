@@ -49,6 +49,8 @@ export default function ReservePage() {
   };
 
   const handlePayment = async () => {
+    console.log("예매하기 버튼 클릭");
+    
     if (selectedSeats.length === 0) {
       alert("좌석을 선택해주세요.");
       return;
@@ -67,19 +69,9 @@ export default function ReservePage() {
     localStorage.setItem("customerName", name);
     localStorage.setItem("customerPhone", phone);
 
-    const tossPayments = await loadTossPayments(clientKey);
+    console.log("이동 직전");
 
-    const reservationNumber =
-      "DKT-" + Date.now().toString().slice(-8);
-
-    await tossPayments.requestPayment("카드", {
-      amount: selectedSeats.length * 25000,
-      orderId: reservationNumber,
-      orderName: `${selectedSeats.length}매 공연 예매`,
-      customerName: name,
-      successUrl: `${window.location.origin}/payment/success`,
-      failUrl: `${window.location.origin}/payment/fail`,
-    });
+    window.location.assign("/payment/manual");
   };
 
   return (
@@ -106,7 +98,7 @@ export default function ReservePage() {
         </div>
 
         {/* 좌석맵 */}
-        <section className="mt-8 w-full overflow-x-auto pb-8">
+        <section className="mt-8 w-full pb-8">
           <SeatMap
             selectedSeats={selectedSeats}
             reservedSeats={reservedSeats}

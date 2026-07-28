@@ -21,10 +21,13 @@ import {
 
 type Reservation = {
   id: string;
+  reservationNumber: string;
   customerName: string;
   customerPhone: string;
   seats: string[];
   amount: number;
+  confirmed: boolean;
+  createdAt: string;
 };
 
 const TOTAL_SEATS = 241;
@@ -50,10 +53,13 @@ export default function AdminPage() {
 
             return {
               id: docItem.id,
+              reservationNumber: data.reservationNumber || "",
               customerName: data.customerName || "",
               customerPhone: data.customerPhone || "",
               seats: data.seats || [],
               amount: data.amount || 0,
+              confirmed: data.confirmed || false,
+              createdAt: data.createdAt || "",
             };
           });
 
@@ -76,7 +82,48 @@ export default function AdminPage() {
   async function handleDelete(id: string) {
     const ok = confirm("예약을 삭제하시겠습니까?");
     if (!ok) return;
+  
+    try {
+      const reservationRef = doc(db, "reservations", id);
+      const reservationSnap = await getDoc(reservationRef);
+  
+      if (!reservationSnap.exists()) {
+        alert("예약 정보를 찾을 수 없습니다.");
+        return;
+      }
+  
+      const reservation = reservationSnap.data();
+  
+      const response = await fetch("/api/sms/cancel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reservationNumber: reservation.reservationNumber,
+          name: reservation.customerName,
+          phone: reservation.customerPhone,
+          seat: reservation.seats.join(", "),
+          quantity: reservation.seats.length,
+        }),
+      });
+  
+      const result = await response.json();
+  
+      if (!result.success) {
+        console.error("취소 문자 발송 실패");
+      }
+  
+      await deleteDoc(reservationRef);
+  
+      alert("예약이 취소되었습니다.");
+    } catch (err) {
+      console.error(err);
+      alert("예약 삭제 실패");
+    }
+  }
 
+  async function handleConfirm(id: string) {
     try {
       const reservationRef = doc(db, "reservations", id);
       const reservationSnap = await getDoc(reservationRef);
@@ -88,34 +135,33 @@ export default function AdminPage() {
 
       const reservation = reservationSnap.data();
 
-      const seats: string[] = reservation.seats || [];
+      await updateDoc(reservationRef, {
+        confirmed: true,
+      });
 
-      const concertRef = doc(db, "concerts", "summer2026");
-      const concertSnap = await getDoc(concertRef);
+      const response = await fetch("/api/sms/confirm", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: reservation.customerName,
+          phone: reservation.customerPhone,
+          seat: reservation.seats.join(", "),
+          quantity: reservation.seats.length,
+        }),
+      });
 
-      if (concertSnap.exists()) {
-        const concert = concertSnap.data();
+      const result = await response.json();
 
-        const reservedSeats: string[] =
-          concert.reservedSeats || [];
-
-        const newReservedSeats = reservedSeats.filter(
-          (seat) => !seats.includes(seat)
-        );
-
-        await updateDoc(concertRef, {
-          reservedSeats: newReservedSeats,
-          remainingSeats:
-            (concert.remainingSeats || 0) + seats.length,
-        });
+      if (!result.success) {
+        console.error("확정 문자 발송 실패");
       }
 
-      await deleteDoc(reservationRef);
-
-      alert("예약이 취소되었습니다.");
+      alert("예약이 확정되었습니다.");
     } catch (err) {
       console.error(err);
-      alert("예약 삭제 실패");
+      alert("예약 확정 실패");
     }
   }
 
@@ -131,8 +177,7 @@ export default function AdminPage() {
     (sum, item) => sum + item.seats.length,
     0
   );
-
-  return (
+    return (
     <main className="min-h-screen bg-black text-white p-10">
       <div className="mx-auto max-w-6xl">
 
@@ -238,14 +283,48 @@ export default function AdminPage() {
                   </span>
                 </p>
 
+                <p>
+                  📌 상태 :
+                  {item.confirmed ? (
+                    <span className="ml-2 text-green-400 font-bold">
+                      ✅ 예약 확정
+                    </span>
+                  ) : (
+                    <span className="ml-2 text-yellow-400 font-bold">
+                      ⏳ 예약 대기
+                    </span>
+                  )}
+                </p>
+
+                <p>
+                  🕒 예약시간 :
+                  <span className="ml-2">
+                    {item.createdAt
+                      ? new Date(item.createdAt).toLocaleString("ko-KR")
+                      : "-"}
+                  </span>
+                </p>
+
               </div>
 
-              <button
-                onClick={() => handleDelete(item.id)}
-                className="mt-5 bg-red-600 hover:bg-red-500 px-5 py-2 rounded-lg"
-              >
-                예약 삭제
-              </button>
+              <div className="mt-5 flex gap-3">
+              {true && (
+                  <button
+                    onClick={() => handleConfirm(item.id)}
+                    className="bg-green-600 hover:bg-green-500 px-5 py-2 rounded-lg"
+                  >
+                    예약 확정
+                  </button>
+                )}
+
+                <button
+                  onClick={() => handleDelete(item.id)}
+                  className="bg-red-600 hover:bg-red-500 px-5 py-2 rounded-lg"
+                >
+                  예약 삭제
+                </button>
+
+              </div>
 
             </div>
 

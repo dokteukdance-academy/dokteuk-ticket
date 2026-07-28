@@ -64,6 +64,20 @@ function SuccessContent() {
           createdAt: serverTimestamp(),
         });
 
+        await fetch("/api/sms", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            reservationNumber: orderId,
+            name: customerName,
+            phone: customerPhone,
+            seat: seats.join(", "),
+            quantity: seats.length,
+          }),
+        });
+
         localStorage.removeItem("selectedSeats");
         localStorage.removeItem("customerName");
         localStorage.removeItem("customerPhone");

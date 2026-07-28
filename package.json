@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-   "dev": "next dev -p 3000",
+    "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -15,7 +15,8 @@
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-qr-code": "^2.2.0"
+    "react-qr-code": "^2.2.0",
+    "solapi": "^6.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

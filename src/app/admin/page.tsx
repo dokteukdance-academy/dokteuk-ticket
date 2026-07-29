@@ -127,18 +127,27 @@ export default function AdminPage() {
     try {
       const reservationRef = doc(db, "reservations", id);
       const reservationSnap = await getDoc(reservationRef);
-
+  
       if (!reservationSnap.exists()) {
         alert("예약 정보를 찾을 수 없습니다.");
         return;
       }
-
+  
       const reservation = reservationSnap.data();
-
+  
+      // QR 입장권에 사용할 추측 불가능한 고유 토큰
+      const ticketToken = crypto.randomUUID().replace(/-/g, "");
+  
+      // 예약 확정 및 QR 토큰 저장
       await updateDoc(reservationRef, {
         confirmed: true,
+        status: "confirmed",
+        ticketToken,
+        entered: false,
+        confirmedAt: new Date().toISOString(),
       });
-
+  
+      // QR 입장권 링크가 포함된 확정 문자 발송
       const response = await fetch("/api/sms/confirm", {
         method: "POST",
         headers: {
@@ -150,22 +159,26 @@ export default function AdminPage() {
           phone: reservation.customerPhone,
           seat: reservation.seats.join(", "),
           quantity: reservation.seats.length,
+          ticketToken,
         }),
       });
-
+  
       const result = await response.json();
-
-      if (!result.success) {
-        console.error("확정 문자 발송 실패");
+  
+      if (!response.ok || !result.success) {
+        console.error("확정 문자 발송 실패:", result);
+        alert(
+          "예약은 확정됐지만 문자 발송에 실패했습니다.\n콘솔을 확인해주세요."
+        );
+        return;
       }
-
-      alert("예약이 확정되었습니다.");
+  
+      alert("예약이 확정되고 QR 입장권 문자가 발송되었습니다.");
     } catch (err) {
       console.error(err);
       alert("예약 확정 실패");
     }
   }
-
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-black text-white">

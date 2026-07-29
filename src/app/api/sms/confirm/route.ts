@@ -15,10 +15,28 @@ export async function POST(req: NextRequest) {
       name,
       phone,
       seat,
+      ticketToken,
     } = await req.json();
 
+    if (!ticketToken) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "티켓 토큰이 없습니다.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+    const ticketUrl =
+      `${siteUrl}/ticket/${ticketToken}`;
+
     const cancelUrl =
-      `${process.env.NEXT_PUBLIC_SITE_URL}/cancel?reservation=${reservationNumber}`;
+      `${siteUrl}/cancel?reservation=${reservationNumber}`;
 
     await messageService.send({
       to: phone.replace(/-/g, ""),
@@ -34,10 +52,15 @@ ${name}님
 
 좌석 : ${seat}
 
+QR 입장권
+${ticketUrl}
+
 예약취소
 ${cancelUrl}
 
-공연장에서 뵙겠습니다.
+공연장 입장 시
+QR 입장권을 보여주세요.
+
 감사합니다.`,
     });
 
@@ -50,7 +73,7 @@ ${cancelUrl}
     return NextResponse.json(
       {
         success: false,
-        message: error?.message,
+        message: error?.message || "확정 문자 발송 실패",
       },
       {
         status: 500,

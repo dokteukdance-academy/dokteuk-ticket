@@ -1,35 +1,41 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function CancelPage() {
-  const router = useRouter();
-
   const [reservationNumber, setReservationNumber] = useState("");
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const reservation = params.get("reservation");
+    const currentUrl = new URL(window.location.href);
 
-    if (reservation) {
-      setReservationNumber(reservation);
-    }
+    const numberFromUrl =
+      currentUrl.searchParams.get("reservation") ??
+      currentUrl.searchParams.get("reservationNumber") ??
+      "";
+
+    console.log("현재 주소:", window.location.href);
+    console.log("URL에서 읽은 예매번호:", numberFromUrl);
+
+    setReservationNumber(numberFromUrl.trim().toUpperCase());
   }, []);
 
   const handleCancel = async () => {
-    if (!reservationNumber.trim()) {
-      alert("예약번호를 입력해주세요.");
+    const normalizedNumber = reservationNumber.trim().toUpperCase();
+
+    if (!normalizedNumber) {
+      setMessage("예매번호를 입력해주세요.");
       return;
     }
 
-    if (!confirm("예약을 취소하시겠습니까?")) {
+    if (!window.confirm("정말 예매를 취소하시겠습니까?")) {
       return;
     }
 
     try {
       setLoading(true);
+      setMessage("");
 
       const response = await fetch("/api/reservation/cancel", {
         method: "POST",
@@ -37,57 +43,97 @@ export default function CancelPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          reservationNumber: reservationNumber.trim(),
+          reservationNumber: normalizedNumber,
         }),
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (!result.success) {
-        alert(result.message || "예약 취소 실패");
-        return;
+      if (data.success) {
+        setMessage("예매가 정상적으로 취소되었습니다.");
+      } else {
+        setMessage(data.message || "예매 취소에 실패했습니다.");
       }
-
-      alert("예약이 정상적으로 취소되었습니다.");
-
-      router.push("/");
-    } catch (err) {
-      console.error(err);
-      alert("예약 취소 중 오류가 발생했습니다.");
+    } catch (error) {
+      console.error("취소 요청 오류:", error);
+      setMessage("서버 연결 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-black flex items-center justify-center px-6">
-      <div className="w-full max-w-md rounded-2xl bg-gray-900 border border-gray-700 p-8">
+    <main
+      style={{
+        minHeight: "100vh",
+        padding: "40px 20px",
+        background: "#f7f7f7",
+        display: "flex",
+        justifyContent: "center",
+      }}
+    >
+      <section
+        style={{
+          width: "100%",
+          maxWidth: "420px",
+          height: "fit-content",
+          padding: "28px",
+          background: "#ffffff",
+          borderRadius: "16px",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+        }}
+      >
+        <h1 style={{ marginTop: 0 }}>예매 취소</h1>
 
-        <h1 className="text-3xl font-bold text-center text-white mb-2">
-          예약 취소
-        </h1>
-
-        <p className="text-center text-gray-400 mb-8">
-          문자에서 들어오셨다면 예약번호가 자동으로 입력됩니다.
+        <p style={{ color: "#666", lineHeight: 1.6 }}>
+          문자로 안내받은 예매번호를 확인한 후 취소해주세요.
         </p>
 
         <input
-          type="text"
-          placeholder="예) DK12345678"
           value={reservationNumber}
-          onChange={(e) => setReservationNumber(e.target.value)}
-          className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-4 text-white mb-6 outline-none focus:border-yellow-500"
+          onChange={(event) =>
+            setReservationNumber(event.target.value.toUpperCase())
+          }
+          placeholder="예매번호를 입력해주세요"
+          disabled={loading}
+          style={{
+            width: "100%",
+            boxSizing: "border-box",
+            padding: "14px",
+            border: "1px solid #ddd",
+            borderRadius: "8px",
+            fontSize: "16px",
+            color: "#111111",
+backgroundColor: "#ffffff",
+          }}
+          
         />
 
         <button
+          type="button"
           onClick={handleCancel}
           disabled={loading}
-          className="w-full rounded-lg bg-red-600 hover:bg-red-500 disabled:bg-gray-600 py-4 font-bold text-white transition"
+          style={{
+            width: "100%",
+            marginTop: "16px",
+            padding: "14px",
+            border: 0,
+            borderRadius: "8px",
+            background: loading ? "#888" : "#111",
+            color: "#fff",
+            fontSize: "16px",
+            fontWeight: 700,
+          }}
         >
-          {loading ? "취소중..." : "예약 취소"}
+          {loading ? "처리 중..." : "예매 취소"}
         </button>
 
-      </div>
+        {message && (
+          <p style={{ marginTop: "18px", textAlign: "center" }}>
+            {message}
+          </p>
+        )}
+      </section>
     </main>
   );
 }

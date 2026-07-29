@@ -1,60 +1,60 @@
 type SeatProps = {
-    seat: string;
-    selected: boolean;
-    reserved?: boolean;
-    blocked?: boolean;
-    disabled?: boolean;
-    onClick: () => void;
-  };
-  
-  export default function Seat({
-    seat,
-    selected,
-    reserved = false,
-    blocked = false,
-    disabled = false,
-    onClick,
-  }: SeatProps) {
-    const isDisabled = reserved || blocked || disabled;
-  
-    return (
-      <button
-        disabled={isDisabled}
-        onClick={onClick}
-        className={`
-          flex
-          items-center
-          justify-center
-  
-          w-8
-          h-8
-  
-          md:w-10
-          md:h-10
-  
-          text-[10px]
-          md:text-sm
-  
-          rounded
-          font-semibold
-  
-          flex-shrink-0
-          transition-all
-  
-          ${
-            blocked
-              ? "bg-red-600 text-white cursor-not-allowed"
-              : disabled
-              ? "bg-gray-500 text-white cursor-not-allowed"
-              : reserved
-              ? "bg-red-400 text-white cursor-not-allowed"
-              : selected
-              ? "bg-green-500 text-white"
-              : "bg-gray-700 hover:bg-yellow-500"
-          }
-        `}
-      >
-        {blocked ? "X" : disabled ? "♿" : seat}
-      </button>
-    );
-  }
+  seat: string;
+  selected: boolean;
+  pending?: boolean;
+  confirmed?: boolean;
+  blocked?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+};
+
+export default function Seat({
+  seat,
+  selected,
+  pending = false,
+  confirmed = false,
+  blocked = false,
+  disabled = false,
+  onClick,
+}: SeatProps) {
+  const isDisabled =
+    pending ||
+    confirmed ||
+    blocked ||
+    disabled;
+
+  return (
+    <button
+      type="button"
+      disabled={isDisabled}
+      onClick={onClick}
+      className={`
+        w-10
+        h-10
+        min-w-[40px]
+        min-h-[40px]
+        flex-shrink-0
+        rounded
+        border
+        font-semibold
+        transition
+
+        ${
+          blocked
+            ? "border-gray-700 bg-gray-800 text-gray-400 cursor-not-allowed"
+            : disabled
+            ? "border-gray-500 bg-gray-500 text-white cursor-not-allowed"
+            : confirmed
+            ? "border-red-600 bg-red-600 text-white cursor-not-allowed"
+            : pending
+            ? "border-white bg-white text-black cursor-not-allowed"
+            : selected
+            ? "border-green-500 bg-green-500 text-white"
+            : "border-gray-600 bg-gray-700 text-white hover:border-yellow-500 hover:bg-yellow-500 hover:text-black"
+        }
+      `}
+    >
+      {blocked ? "X" : disabled ? "♿" : seat}
+    </button>
+  );
+}

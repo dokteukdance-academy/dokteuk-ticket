@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CancelPage() {
@@ -8,6 +8,15 @@ export default function CancelPage() {
 
   const [reservationNumber, setReservationNumber] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reservation = params.get("reservation");
+
+    if (reservation) {
+      setReservationNumber(reservation);
+    }
+  }, []);
 
   const handleCancel = async () => {
     if (!reservationNumber.trim()) {
@@ -59,7 +68,7 @@ export default function CancelPage() {
         </h1>
 
         <p className="text-center text-gray-400 mb-8">
-          문자로 받은 예약번호를 입력해주세요.
+          문자에서 들어오셨다면 예약번호가 자동으로 입력됩니다.
         </p>
 
         <input

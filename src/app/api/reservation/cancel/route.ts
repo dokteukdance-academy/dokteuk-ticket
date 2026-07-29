@@ -10,16 +10,38 @@ import {
 } from "firebase/firestore";
 
 export async function POST(req: NextRequest) {
-    console.log("★★★★★ API CANCEL 실행 ★★★★★");
+  console.log("★★★★★ API CANCEL 실행 ★★★★★");
+
   try {
     const { reservationNumber } = await req.json();
 
+    // 입력값 정리
+    const inputNumber = String(reservationNumber ?? "")
+      .trim()
+      .toUpperCase();
+
     const snapshot = await getDocs(collection(db, "reservations"));
 
-    const target = snapshot.docs.find(
-      (docItem) =>
-        docItem.data().reservationNumber === reservationNumber
+    // 디버그 로그
+    console.log("입력된 예매번호:", JSON.stringify(inputNumber));
+    console.log(
+      "DB 예매번호 목록:",
+      snapshot.docs.map((docItem) =>
+        String(docItem.data().reservationNumber ?? "")
+          .trim()
+          .toUpperCase()
+      )
     );
+
+    const target = snapshot.docs.find((docItem) => {
+      const savedNumber = String(
+        docItem.data().reservationNumber ?? ""
+      )
+        .trim()
+        .toUpperCase();
+
+      return savedNumber === inputNumber;
+    });
 
     if (!target) {
       return NextResponse.json({
@@ -51,10 +73,11 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("취소 오류:", err);
 
     return NextResponse.json({
       success: false,
+      message: "서버 오류",
     });
   }
 }

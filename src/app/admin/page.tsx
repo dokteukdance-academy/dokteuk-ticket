@@ -145,6 +145,7 @@ export default function AdminPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          reservationNumber: reservation.reservationNumber,
           name: reservation.customerName,
           phone: reservation.customerPhone,
           seat: reservation.seats.join(", "),
@@ -308,7 +309,7 @@ export default function AdminPage() {
               </div>
 
               <div className="mt-5 flex gap-3">
-              {true && (
+              {!item.confirmed && (
                   <button
                     onClick={() => handleConfirm(item.id)}
                     className="bg-green-600 hover:bg-green-500 px-5 py-2 rounded-lg"

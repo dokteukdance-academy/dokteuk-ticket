@@ -40,7 +40,7 @@ export default function EventInfoCard({
           Event Details
         </h2>
 
-        <div className="glass-card grid grid-cols-1 divide-y divide-white/10 rounded-2xl md:grid-cols-3 md:divide-x md:divide-y-0">
+        <div className="glass-card grid grid-cols-1 divide-y divide-white/10 rounded-2xl md:grid-cols-2 md:divide-x md:divide-y-0">
           <InfoBlock label="Event Date">
             <p className="text-2xl font-semibold md:text-3xl">
               {concert.date}
@@ -55,16 +55,7 @@ export default function EventInfoCard({
               {concert.venue}
             </p>
             <p className="mt-2 text-text-muted">
-              대전서구문화원 6층 공연장
-            </p>
-          </InfoBlock>
-
-          <InfoBlock label="Remaining Seats">
-            <p className="text-5xl font-semibold text-accent-gold md:text-6xl">
-              {concert.remainingSeats}
-            </p>
-            <p className="mt-2 text-text-muted">
-              총 {concert.totalSeats}석
+              대전 서구문화원 6층 공연장
             </p>
           </InfoBlock>
         </div>

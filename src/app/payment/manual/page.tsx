@@ -14,6 +14,9 @@ export default function ManualPaymentPage() {
   const [phone, setPhone] = useState("");
   const [seats, setSeats] = useState<string[]>([]);
 
+  const kakaoPayUrl =
+    "https://qr.kakaopay.com/281006011000040154942594";
+
   useEffect(() => {
     setName(localStorage.getItem("customerName") || "");
     setPhone(localStorage.getItem("customerPhone") || "");
@@ -25,8 +28,13 @@ export default function ManualPaymentPage() {
     setSeats(savedSeats);
   }, []);
 
+  const handleKakaoPay = () => {
+    window.location.href = kakaoPayUrl;
+  };
+
   const handleComplete = async () => {
     console.log("★★★★★ 입금완료 버튼 클릭 ★★★★★");
+
     try {
       setLoading(true);
 
@@ -48,6 +56,7 @@ export default function ManualPaymentPage() {
         confirmed: false,
         createdAt: new Date().toISOString(),
       });
+
       const smsResponse = await fetch("/api/sms", {
         method: "POST",
         headers: {
@@ -61,13 +70,13 @@ export default function ManualPaymentPage() {
           quantity: seats.length,
         }),
       });
-      
+
       console.log("SMS STATUS:", smsResponse.status);
-      
+
       const smsResult = await smsResponse.json();
-      
+
       console.log("SMS RESULT:", smsResult);
-      
+
       if (!smsResponse.ok) {
         console.log("문자 발송 실패", smsResult);
       }
@@ -89,80 +98,84 @@ export default function ManualPaymentPage() {
     }
   };
 
-  return (
-    <main className="min-h-screen bg-black text-white px-6 py-10">
-      <div className="max-w-xl mx-auto">
+  const totalAmount = seats.length * 25000;
 
-        <h1 className="text-4xl font-bold text-center mb-8">
+  return (
+    <main className="min-h-screen bg-black px-6 py-10 text-white">
+      <div className="mx-auto max-w-xl">
+        <h1 className="mb-8 text-center text-4xl font-bold">
           카카오페이 송금
         </h1>
 
-        <div className="bg-gray-900 rounded-xl p-6 space-y-6">
-        <div className="space-y-2">
+        <div className="space-y-6 rounded-xl bg-gray-900 p-6">
+          <div className="space-y-4">
+            <p>
+              <span className="text-gray-400">예약자</span>
+              <br />
+              <span className="font-bold">{name}</span>
+            </p>
 
-<p>
-  <span className="text-gray-400">예약자</span>
-  <br />
-  <span className="font-bold">{name}</span>
-</p>
+            <p>
+              <span className="text-gray-400">전화번호</span>
+              <br />
+              <span className="font-bold">{phone}</span>
+            </p>
 
-<p>
-  <span className="text-gray-400">전화번호</span>
-  <br />
-  <span className="font-bold">{phone}</span>
-</p>
+            <p>
+              <span className="text-gray-400">선택좌석</span>
+              <br />
+              <span className="font-bold text-yellow-400">
+                {seats.join(", ")}
+              </span>
+            </p>
 
-<p>
-  <span className="text-gray-400">선택좌석</span>
-  <br />
-  <span className="font-bold text-yellow-400">
-    {seats.join(", ")}
-  </span>
-</p>
+            <p>
+              <span className="text-gray-400">결제금액</span>
+              <br />
+              <span className="text-2xl font-bold">
+                ₩{totalAmount.toLocaleString()}
+              </span>
+            </p>
+          </div>
 
-<p>
-  <span className="text-gray-400">결제금액</span>
-  <br />
-  <span className="font-bold text-2xl">
-    ₩{(seats.length * 25000).toLocaleString()}
-  </span>
-</p>
+          <div className="border-t border-gray-700 pt-6">
+            <h2 className="mb-4 text-center text-xl font-bold">
+              카카오페이 QR
+            </h2>
 
-</div>
+            <Image
+              src="/kakao-qr.png"
+              alt="카카오페이 송금 QR"
+              width={260}
+              height={260}
+              className="mx-auto rounded-lg"
+            />
 
-<div className="border-t border-gray-700 pt-6">
+            <p className="mt-6 text-center text-gray-400">
+              아래 버튼을 눌러 카카오페이로 이동한 뒤
+              <br />
+              ₩{totalAmount.toLocaleString()}을 송금해주세요.
+            </p>
 
-<h2 className="text-xl font-bold mb-4 text-center">
-  카카오페이 QR
-</h2>
+            <button
+              type="button"
+              onClick={handleKakaoPay}
+              className="mt-6 w-full rounded-lg bg-[#FEE500] py-4 text-lg font-bold text-black transition hover:brightness-95"
+            >
+              카카오페이로 바로 송금하기
+            </button>
+          </div>
 
-<Image
-  src="/kakao-qr.png"
-  alt="카카오 QR"
-  width={260}
-  height={260}
-  className="mx-auto rounded-lg"
-/>
-
-<p className="mt-6 text-center text-gray-400">
-  QR을 스캔하여
-  <br />
-  위 금액을 송금해주세요.
-</p>
-
-</div>
-<button
+          <button
+            type="button"
             onClick={handleComplete}
             disabled={loading}
-            className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-500 text-black font-bold py-4 rounded-lg transition"
+            className="w-full rounded-lg bg-yellow-500 py-4 font-bold text-black transition hover:bg-yellow-400 disabled:bg-gray-500"
           >
             {loading ? "저장중..." : "입금 완료했습니다"}
           </button>
-
         </div>
-
       </div>
-
     </main>
   );
 }

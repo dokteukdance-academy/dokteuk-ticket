@@ -15,22 +15,22 @@ export async function POST(req: NextRequest) {
   try {
     const { reservationNumber } = await req.json();
 
-    // 입력값 정리
     const inputNumber = String(reservationNumber ?? "")
       .trim()
       .toUpperCase();
 
-    const snapshot = await getDocs(collection(db, "reservations"));
+    if (!inputNumber) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "예매번호를 입력해주세요.",
+        },
+        { status: 400 }
+      );
+    }
 
-    // 디버그 로그
-    console.log("입력된 예매번호:", JSON.stringify(inputNumber));
-    console.log(
-      "DB 예매번호 목록:",
-      snapshot.docs.map((docItem) =>
-        String(docItem.data().reservationNumber ?? "")
-          .trim()
-          .toUpperCase()
-      )
+    const snapshot = await getDocs(
+      collection(db, "reservations")
     );
 
     const target = snapshot.docs.find((docItem) => {
@@ -44,40 +44,80 @@ export async function POST(req: NextRequest) {
     });
 
     if (!target) {
-      return NextResponse.json({
-        success: false,
-        message: "예약을 찾을 수 없습니다.",
-      });
+      return NextResponse.json(
+        {
+          success: false,
+          message: "예약을 찾을 수 없습니다.",
+        },
+        { status: 404 }
+      );
     }
 
-    const reservationRef = doc(db, "reservations", target.id);
     const reservation = target.data();
 
+    const reservationRef = doc(
+      db,
+      "reservations",
+      target.id
+    );
+
+    // 예약 삭제
     await deleteDoc(reservationRef);
 
-    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/sms/cancel`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: reservation.customerName,
-        phone: reservation.customerPhone,
-        seat: reservation.seats.join(", "),
-        quantity: reservation.seats.length,
-      }),
-    });
+    console.log("예약 삭제 성공:", inputNumber);
+
+    // 취소 문자는 실패해도 예약 취소 결과에는 영향을 주지 않도록 처리
+    try {
+      const smsCancelUrl = new URL(
+        "/api/sms/cancel",
+        req.url
+      );
+
+      const smsResponse = await fetch(smsCancelUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reservationNumber: inputNumber,
+          name: reservation.customerName,
+          phone: reservation.customerPhone,
+          seat: Array.isArray(reservation.seats)
+            ? reservation.seats.join(", ")
+            : "",
+          quantity: Array.isArray(reservation.seats)
+            ? reservation.seats.length
+            : 0,
+        }),
+      });
+
+      const smsResult = await smsResponse.json().catch(() => null);
+
+      console.log("취소 문자 응답:", {
+        status: smsResponse.status,
+        result: smsResult,
+      });
+
+      if (!smsResponse.ok) {
+        console.error("취소 문자 발송 실패:", smsResult);
+      }
+    } catch (smsError) {
+      console.error("취소 문자 요청 오류:", smsError);
+    }
 
     return NextResponse.json({
       success: true,
+      message: "예매가 정상적으로 취소되었습니다.",
     });
-
   } catch (err) {
     console.error("취소 오류:", err);
 
-    return NextResponse.json({
-      success: false,
-      message: "서버 오류",
-    });
+    return NextResponse.json(
+      {
+        success: false,
+        message: "서버 오류가 발생했습니다.",
+      },
+      { status: 500 }
+    );
   }
 }
